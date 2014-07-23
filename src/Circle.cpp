@@ -6,9 +6,12 @@ Circle::Circle() {
 	z = 0;
 	radius = 1;
 	color = ofColor(0, 0, 0);
+
+	timesDrawn = 0;
 }
 
 void Circle::drawCircle() {
 	ofSetColor(color);
 	ofCircle(x, y, z, radius);
+	timesDrawn++;
 }

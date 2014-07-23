@@ -19,4 +19,6 @@ public:
 	int radius;
 	ofColor color;
 
+	int timesDrawn;
+
 };

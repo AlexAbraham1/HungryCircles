@@ -35,6 +35,8 @@ void ofApp::setup() {
 
 	minRadius = 10;
 	maxRadius = 30;
+
+	maxTimesDrawn = 20;
 }
 
 //--------------------------------------------------------------
@@ -61,11 +63,7 @@ void ofApp::update() {
 
 			while (y <= screenHeight) {
 
-				int radius = int(
-						minRadius
-								+ static_cast<float>(rand())
-										/ (static_cast<float>(RAND_MAX
-												/ (maxRadius - minRadius))));
+				int radius = int(minRadius+ static_cast<float>(rand())/ (static_cast<float>(RAND_MAX/ (maxRadius - minRadius))));
 
 				if (isBlankSpace(x, y)) {
 					Circle * circle = new Circle();
@@ -98,7 +96,6 @@ void ofApp::update() {
 //--------------------------------------------------------------
 void ofApp::draw() {
 	ofSetHexColor(0xFFFFFF);
-	grabber.draw(0, 0);
 	for (std::vector<Circle>::size_type i = 0; i != circles.size(); i++) {
 		Circle * circle = circles[i];
 		ofColor color = grabber.getPixelsRef().getColor(circle->x, circle->y);
@@ -108,6 +105,16 @@ void ofApp::draw() {
 		circle->color = color;
 		circle->drawCircle();
 	}
+
+	for (std::vector<Circle>::size_type i = 0; i != added_circles.size(); i++) {
+		Circle * circle = added_circles[i];
+
+		if (circle->timesDrawn <= maxTimesDrawn) {
+			circle->drawCircle();
+		}
+	}
+
+
 	ofPushStyle();
 
 	for (std::vector<ofxCvBlob>::size_type i = 0; i != right_eyes.size(); i++) {
@@ -152,7 +159,7 @@ void ofApp::touchMoved(int x, int y, int id) {
 
 //--------------------------------------------------------------
 void ofApp::touchUp(int x, int y, int id) {
-
+	touchCircle(x, y);
 }
 
 //--------------------------------------------------------------
@@ -283,4 +290,22 @@ void ofApp::saveImage() {
 	string date = ss.str();
 
 	ofSaveScreen(date + ".png");
+}
+
+void ofApp::touchCircle(int x, int y) {
+	int red = int(0+ static_cast<float>(rand())/ (static_cast<float>(RAND_MAX/ (255 - 0))));
+	int green = int(0+ static_cast<float>(rand())/ (static_cast<float>(RAND_MAX/ (255 - 0))));
+	int blue = int(0+ static_cast<float>(rand())/ (static_cast<float>(RAND_MAX/ (255 - 0))));
+	int radius = int(minRadius+ static_cast<float>(rand())/ (static_cast<float>(RAND_MAX/ (maxRadius - minRadius))));
+	ofColor color = ofColor(red, green, blue);
+
+	Circle * circle = new Circle();
+
+	circle->x = x;
+	circle->y = y;
+	circle->radius = radius;
+	circle->z = 200;
+	circle->color = color;
+
+	added_circles.push_back(circle);
 }

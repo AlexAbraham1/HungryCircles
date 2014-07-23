@@ -44,6 +44,7 @@ public:
 	void switchInvert();
 	void setZIndex();
 	void saveImage();
+	void touchCircle(int x, int y);
 
 	ofVideoGrabber grabber;
 
@@ -63,6 +64,8 @@ public:
 	std::vector<ofxCvBlob> right_eyes;
 	std::vector<ofxCvBlob> left_eyes;
 
+	std::vector<Circle*> added_circles;
+
 	ofImage googleEye;
 
 	int one_second_time;
@@ -72,6 +75,7 @@ public:
 	int maxRadius;
 	int minZ;
 	int maxZ;
+	int maxTimesDrawn;
 
 	int DEVICE_ID;
 
