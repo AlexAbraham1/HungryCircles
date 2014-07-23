@@ -9,11 +9,11 @@ void ofApp::setup() {
 	screenHeight = ofGetScreenHeight();
 
 	grabber.setPixelFormat(OF_PIXELS_RGB);
-	DEVICE_ID = 1;
+	DEVICE_ID = 0;
 	grabber.setDeviceID(DEVICE_ID);
 	grabber.initGrabber(screenWidth, screenHeight);
 
-	haarScaleFactor = 6;
+	haarScaleFactor = screenWidth / 176;
 
 	int haarWidth = int(screenWidth / haarScaleFactor);
 	int haarHeight = int(screenHeight / haarScaleFactor);
@@ -22,9 +22,9 @@ void ofApp::setup() {
 	colorCvSmall.allocate(haarWidth, haarHeight);
 	grayCv.allocate(haarWidth, haarHeight);
 
-	faceFinder.setup("left_eye.xml");
-	faceFinder.setNeighbors(12);
-	faceFinder.setScaleHaar(1.2);
+	haarFinder.setup("right_eye.xml");
+	haarFinder.setNeighbors(1);
+	haarFinder.setScaleHaar(2);
 
 	one_second_time = ofGetSystemTime();
 	camera_fps = 0;
@@ -52,8 +52,8 @@ void ofApp::update() {
 		colorCv = grabber.getPixels();
 		colorCvSmall.scaleIntoMe(colorCv, CV_INTER_NN);
 		grayCv = colorCvSmall;
-		faceFinder.findHaarObjects(grayCv);
-		faces = faceFinder.blobs;
+		haarFinder.findHaarObjects(grayCv);
+		right_eyes = haarFinder.blobs;
 
 		if (firstRun) {
 			int x = 0;
@@ -99,27 +99,27 @@ void ofApp::update() {
 void ofApp::draw() {
 	ofSetHexColor(0xFFFFFF);
 	grabber.draw(0, 0);
-//	for (std::vector<Circle>::size_type i = 0; i != circles.size(); i++) {
-//		Circle * circle = circles[i];
-//		ofColor color = grabber.getPixelsRef().getColor(screenWidth - circle->x,
-//				circle->y);
-//		if (invertColors) {
-//			color.invert();
-//		}
-//		circle->color = color;
-//		circle->drawCircle();
-//	}
+	for (std::vector<Circle>::size_type i = 0; i != circles.size(); i++) {
+		Circle * circle = circles[i];
+		ofColor color = grabber.getPixelsRef().getColor(circle->x, circle->y);
+		if (invertColors) {
+			color.invert();
+		}
+		circle->color = color;
+		circle->drawCircle();
+	}
 	ofPushStyle();
-	for (std::vector<ofxCvBlob>::size_type i = 0; i != faces.size(); i++) {
-		ofxCvBlob& face = faces[i];
-		int x = (face.boundingRect.x + (face.boundingRect.width/2)) * haarScaleFactor;
-		int y = (face.boundingRect.y + (face.boundingRect.height/2)) * haarScaleFactor;
-		int radius1 = face.boundingRect.width;
-		int radius2 = face.boundingRect.width/2;
 
-		ofSetColor(255, 0, 255);
-		ofCircle(x,y, radius1);
-		ofSetColor(0, 0, 255);
+	for (std::vector<ofxCvBlob>::size_type i = 0; i != right_eyes.size(); i++) {
+		ofxCvBlob& eye = right_eyes[i];
+		int x = (eye.boundingRect.x + (eye.boundingRect.width/2)) * haarScaleFactor;
+		int y = (eye.boundingRect.y + (eye.boundingRect.height/2)) * haarScaleFactor;
+		int radius1 = eye.boundingRect.width;
+		int radius2 = eye.boundingRect.width / 2;
+
+		ofSetColor(255, 255, 255);
+		ofCircle(x, y, radius1);
+		ofSetColor(0, 0, 0);
 		ofCircle(x, y, radius2);
 	}
 	ofPopStyle();
@@ -157,13 +157,7 @@ void ofApp::touchUp(int x, int y, int id) {
 
 //--------------------------------------------------------------
 void ofApp::touchDoubleTap(int x, int y, int id) {
-//	stringstream ss;
-//	ss << ofGetElapsedTimef();
-//	string date = ss.str();
-//
-//	ofSaveScreen(date + ".png");
 
-	switchInvert();
 }
 
 //--------------------------------------------------------------
@@ -281,4 +275,12 @@ void ofApp::setZIndex() {
 
 		circle->z = zIndex;
 	}
+}
+
+void ofApp::saveImage() {
+	stringstream ss;
+	ss << ofGetElapsedTimef();
+	string date = ss.str();
+
+	ofSaveScreen(date + ".png");
 }

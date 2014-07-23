@@ -43,6 +43,7 @@ public:
 	void switchCamera();
 	void switchInvert();
 	void setZIndex();
+	void saveImage();
 
 	ofVideoGrabber grabber;
 
@@ -50,7 +51,7 @@ public:
 	ofxCvColorImage colorCvSmall;
 	ofxCvGrayscaleImage grayCv;
 
-	ofxCvHaarFinder faceFinder;
+	ofxCvHaarFinder haarFinder;
 
 	bool firstRun;
 	bool invertColors;
@@ -59,8 +60,10 @@ public:
 	float haarScaleFactor;
 
 	std::vector<Circle*> circles;
-	std::vector<ofxCvBlob> faces;
-	std::vector<ofxCvBlob> eyes;
+	std::vector<ofxCvBlob> right_eyes;
+	std::vector<ofxCvBlob> left_eyes;
+
+	ofImage googleEye;
 
 	int one_second_time;
 	int camera_fps;
