@@ -277,9 +277,11 @@ void ofApp::fixZIndex() {
 void ofApp::saveImage() {
 	stringstream ss;
 	ss << ofGetElapsedTimef();
-	string date = ss.str();
-
-	image.saveImage(date + ".png");
+	string name = "../../../../DCIM/HungryCircles/" + ss.str() + ".png";
+	ofSaveScreen(name);
+	image.loadImage(name);
+	fixImageRotation();
+	image.saveImage(name);
 }
 
 void ofApp::touchCircle(int x, int y) {
