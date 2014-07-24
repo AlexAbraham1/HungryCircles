@@ -2,6 +2,7 @@
 
 #include "ofMain.h"
 #include "ofxAndroid.h"
+#include "ofxAccelerometer.h"
 
 #include "ofxOpenCv.h"
 #include <vector>
@@ -44,9 +45,11 @@ public:
 	void saveImage();
 	void touchCircle(int x, int y);
 	void detectHandCircles(int xLow, int yLow, int xHigh, int yHigh);
+	void fixImageRotation();
 
-	ofVideoGrabber grabber;
+	shared_ptr<ofVideoGrabber> grabber;
 
+	ofImage image;
 	ofxCvColorImage colorCv;
 	ofxCvColorImage colorCvSmall;
 	ofxCvGrayscaleImage grayCv;
@@ -71,5 +74,9 @@ public:
 
 	int screenWidth;
 	int screenHeight;
+	int haarWidth;
+	int haarHeight;
+
+	int orientation;
 
 };

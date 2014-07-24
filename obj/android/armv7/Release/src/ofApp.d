@@ -186,6 +186,7 @@ obj/android/armv7/Release/src/ofApp.o: src/ofApp.cpp src/ofApp.h \
  ../../../addons/ofxAndroid/src/ofAppAndroidWindow.h \
  ../../../addons/ofxAndroid/src/ofxAndroidApp.h \
  ../../../addons/ofxAndroid/src/ofxAndroidUtils.h \
+ ../../../addons/ofxAccelerometer/src/ofxAccelerometer.h \
  ../../../addons/ofxOpenCv/src/ofxOpenCv.h \
  ../../../addons/ofxOpenCv/src/ofxCvConstants.h \
  ../../../addons/ofxOpenCv/libs/opencv/include/opencv/cv.h \
@@ -624,6 +625,8 @@ src/ofApp.h:
 ../../../addons/ofxAndroid/src/ofxAndroidApp.h:
 
 ../../../addons/ofxAndroid/src/ofxAndroidUtils.h:
+
+../../../addons/ofxAccelerometer/src/ofxAccelerometer.h:
 
 ../../../addons/ofxOpenCv/src/ofxOpenCv.h:
 

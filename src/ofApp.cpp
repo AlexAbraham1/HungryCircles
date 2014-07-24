@@ -8,19 +8,16 @@ void ofApp::setup() {
 	screenWidth = ofGetScreenWidth();
 	screenHeight = ofGetScreenHeight();
 
-	grabber.setPixelFormat(OF_PIXELS_RGB);
+	grabber = shared_ptr<ofVideoGrabber>(new ofVideoGrabber());
+	grabber->setPixelFormat(OF_PIXELS_RGB);
 	DEVICE_ID = 0;
-	grabber.setDeviceID(DEVICE_ID);
-	grabber.initGrabber(screenWidth, screenHeight);
+	grabber->setDeviceID(DEVICE_ID);
+	grabber->initGrabber(screenWidth, screenHeight);
 
 	haarScaleFactor = screenWidth / 176;
 
-	int haarWidth = int(screenWidth / haarScaleFactor);
-	int haarHeight = int(screenHeight / haarScaleFactor);
-
-	colorCv.allocate(screenWidth, screenHeight);
-	colorCvSmall.allocate(haarWidth, haarHeight);
-	grayCv.allocate(haarWidth, haarHeight);
+	haarWidth = int(screenWidth / haarScaleFactor);
+	haarHeight = int(screenHeight / haarScaleFactor);
 
 	haarFinder.setup("right_eye.xml");
 	haarFinder.setNeighbors(1);
@@ -32,15 +29,22 @@ void ofApp::setup() {
 	maxRadius = 50;
 
 	maxTimesDrawn = 20;
+
+	orientation = OF_ORIENTATION_DEFAULT;
+
+	ofxAccelerometer.setup();
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
-	grabber.update();
-	if (grabber.isFrameNew()) {
+	grabber->update();
+	if (grabber->isFrameNew()) {
 
-		//Detect Faces
-		colorCv = grabber.getPixels();
+		//Detect Eyes
+		image.setFromPixels(grabber->getPixelsRef());
+		fixImageRotation();
+
+		colorCv = image.getPixels();
 		colorCvSmall.scaleIntoMe(colorCv, CV_INTER_NN);
 		grayCv = colorCvSmall;
 		haarFinder.findHaarObjects(grayCv);
@@ -85,18 +89,20 @@ void ofApp::update() {
 
 		}
 
+
 	}
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
 	ofSetHexColor(0xFFFFFF);
-	for (std::vector<Circle>::size_type i = 0; i != circles.size(); i++) {
-		Circle * circle = circles[i];
-		ofColor color = grabber.getPixelsRef().getColor(circle->x, circle->y);
-		circle->color = color;
-		circle->drawCircle();
-	}
+	grabber->draw(0,0);
+	//	for (std::vector<Circle>::size_type i = 0; i != circles.size(); i++) {
+//		Circle * circle = circles[i];
+//		ofColor color = grabber->getPixelsRef().getColor(screenWidth - circle->x, circle->y);
+//		circle->color = color;
+//		circle->drawCircle();
+//	}
 
 	for(std::list<Circle*>::iterator circle = added_circles.begin(); circle != added_circles.end(); ++circle) {
 		if ((*circle)->timesDrawn <= maxTimesDrawn) {
@@ -109,8 +115,37 @@ void ofApp::draw() {
 
 	for (std::vector<ofxCvBlob>::size_type i = 0; i != eyes.size(); i++) {
 		ofxCvBlob& eye = eyes[i];
-		int x = (eye.boundingRect.x + (eye.boundingRect.width/2)) * haarScaleFactor;
-		int y = (eye.boundingRect.y + (eye.boundingRect.height/2)) * haarScaleFactor;
+
+		int x;
+		int y;
+
+
+		if (orientation == OF_ORIENTATION_DEFAULT) {
+			//Portrait Rightside Up
+			x = (eye.boundingRect.y + (eye.boundingRect.height/2)) * haarScaleFactor;
+			y = (haarHeight - (eye.boundingRect.x + (eye.boundingRect.width/2))) * haarScaleFactor;
+
+			ofLog() << "ORIENTATION: Portrait";
+		} else if (orientation == OF_ORIENTATION_180) {
+			//Portrait Upside Down
+			x = (haarWidth - (eye.boundingRect.y + (eye.boundingRect.height/2))) * haarScaleFactor;
+			y = (eye.boundingRect.x + (eye.boundingRect.width/2)) * haarScaleFactor;
+
+			ofLog() << "ORIENTATION: Portrait (Flipped)";
+		} else if (orientation == OF_ORIENTATION_90_RIGHT) {
+			//Landscape Right
+			x = (haarWidth - (eye.boundingRect.x + (eye.boundingRect.width/2))) * haarScaleFactor;
+			y = (haarHeight - (eye.boundingRect.y + (eye.boundingRect.height/2))) * haarScaleFactor;
+
+			ofLog() << "ORIENTATION: Landscape (Flipped)";
+		} else {
+			//Landscape
+			x = (eye.boundingRect.x + (eye.boundingRect.width/2)) * haarScaleFactor;
+			y = (eye.boundingRect.y + (eye.boundingRect.height/2)) * haarScaleFactor;
+
+			ofLog() << "ORIENTATION: Landscape";
+		}
+
 		int radius1 = eye.boundingRect.width;
 
 		ofSetColor(0, 0, 255);
@@ -151,7 +186,7 @@ void ofApp::touchUp(int x, int y, int id) {
 
 //--------------------------------------------------------------
 void ofApp::touchDoubleTap(int x, int y, int id) {
-
+	saveImage();
 }
 
 //--------------------------------------------------------------
@@ -229,19 +264,6 @@ bool ofApp::isBlankSpace(int x, int y) {
 
 }
 
-void ofApp::switchCamera() {
-	if (DEVICE_ID == 1) {
-		DEVICE_ID = 0;
-	} else {
-		DEVICE_ID = 1;
-	}
-
-	grabber.close();
-
-	grabber.setDeviceID(DEVICE_ID);
-	grabber.initGrabber(screenWidth, screenHeight);
-}
-
 void ofApp::fixZIndex() {
 	for (std::vector<Circle>::size_type i = 0; i != circles.size(); i++) {
 		Circle * circle = circles[i];
@@ -258,7 +280,7 @@ void ofApp::saveImage() {
 	ss << ofGetElapsedTimef();
 	string date = ss.str();
 
-	ofSaveScreen(date + ".png");
+	image.saveImage(date + ".png");
 }
 
 void ofApp::touchCircle(int x, int y) {
@@ -277,4 +299,45 @@ void ofApp::touchCircle(int x, int y) {
 	circle->color = color;
 
 	added_circles.push_back(circle);
+}
+
+void ofApp::fixImageRotation() {
+	ofVec3f accel = ofxAccelerometer.getForce();
+	int oX = floor(accel.x + 0.5);
+	int oY = floor(accel.y + 0.5);
+
+	if (oX == 1 && oY == 0) {
+		image.rotate90(1);
+
+		colorCv.allocate(screenHeight, screenWidth);
+		colorCvSmall.allocate(haarHeight, haarWidth);
+		grayCv.allocate(haarHeight, haarWidth);
+
+		orientation = OF_ORIENTATION_DEFAULT;
+
+	} else if (oX == -1 && oY == 0) {
+		image.rotate90(3);
+
+		colorCv.allocate(screenHeight, screenWidth);
+		colorCvSmall.allocate(haarHeight, haarWidth);
+		grayCv.allocate(haarHeight, haarWidth);
+
+		orientation = OF_ORIENTATION_180;
+
+	} else if (oX == 0 && oY == 1) {
+		image.rotate90(2);
+
+		colorCv.allocate(screenWidth, screenHeight);
+		colorCvSmall.allocate(haarWidth, haarHeight);
+		grayCv.allocate(haarWidth, haarHeight);
+
+		orientation = OF_ORIENTATION_90_RIGHT;
+
+	} else {
+		colorCv.allocate(screenWidth, screenHeight);
+		colorCvSmall.allocate(haarWidth, haarHeight);
+		grayCv.allocate(haarWidth, haarHeight);
+
+		orientation = OF_ORIENTATION_90_LEFT;
+	}
 }
