@@ -28,7 +28,7 @@ void ofApp::setup() {
 	minRadius = 10;
 	maxRadius = 50;
 
-	maxTimesDrawn = 20;
+	maxTimesDrawn = 10;
 
 	orientation = OF_ORIENTATION_DEFAULT;
 
@@ -96,13 +96,12 @@ void ofApp::update() {
 //--------------------------------------------------------------
 void ofApp::draw() {
 	ofSetHexColor(0xFFFFFF);
-	grabber->draw(0,0);
-	//	for (std::vector<Circle>::size_type i = 0; i != circles.size(); i++) {
-//		Circle * circle = circles[i];
-//		ofColor color = grabber->getPixelsRef().getColor(screenWidth - circle->x, circle->y);
-//		circle->color = color;
-//		circle->drawCircle();
-//	}
+	for (std::vector<Circle>::size_type i = 0; i != circles.size(); i++) {
+		Circle * circle = circles[i];
+		ofColor color = grabber->getPixelsRef().getColor(circle->x, circle->y);
+		circle->color = color;
+		circle->drawCircle();
+	}
 
 	for(std::list<Circle*>::iterator circle = added_circles.begin(); circle != added_circles.end(); ++circle) {
 		if ((*circle)->timesDrawn <= maxTimesDrawn) {
