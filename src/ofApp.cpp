@@ -4,6 +4,7 @@
 void ofApp::setup() {
 	ofBackground(255, 255, 255);
 	ofSetLogLevel (OF_LOG_VERBOSE);
+	font.loadFont("verdana.ttf",72);
 
 	screenWidth = ofGetScreenWidth();
 	screenHeight = ofGetScreenHeight();
@@ -31,6 +32,10 @@ void ofApp::setup() {
 	maxTimesDrawn = 10;
 
 	orientation = OF_ORIENTATION_DEFAULT;
+
+	percent = 50;
+
+	showPercent = false;
 
 	ofxAccelerometer.setup();
 }
@@ -151,16 +156,24 @@ void ofApp::draw() {
 		ofCircle(x, y, 100, radius1);
 	}
 	ofPopStyle();
+
+	if (showPercent) {
+		ofSetHexColor(0xFFFFFF);
+		stringstream ss;
+		ss << percent;
+		font.drawString(ss.str(), screenWidth/2, screenHeight/2);
+		ss.str("");
+	}
 }
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key) {
-
+	ofLog() << "Key Pressed: " << key;
 }
 
 //--------------------------------------------------------------
 void ofApp::keyReleased(int key) {
-
+	ofLog() << "Key Released: " << key;
 }
 
 //--------------------------------------------------------------
@@ -170,17 +183,28 @@ void ofApp::windowResized(int w, int h) {
 
 //--------------------------------------------------------------
 void ofApp::touchDown(int x, int y, int id) {
-
+	percent = ((x*100)/screenWidth) + minRadius;
+	if (percent > 100) {
+		percent = 100;
+	}
+	showPercent = true;
 }
 
 //--------------------------------------------------------------
 void ofApp::touchMoved(int x, int y, int id) {
-
+	percent = ((x*100)/screenWidth) + minRadius;
+	if (percent > 100) {
+		percent = 100;
+	}
 }
 
 //--------------------------------------------------------------
 void ofApp::touchUp(int x, int y, int id) {
-	touchCircle(x, y);
+	showPercent = false;
+	maxRadius = percent;
+	circles.clear();
+	firstRun = true;
+
 }
 
 //--------------------------------------------------------------

@@ -79,4 +79,10 @@ public:
 
 	int orientation;
 
+	int percent;
+
+	bool showPercent;
+
+	ofTrueTypeFont font;
+
 };
