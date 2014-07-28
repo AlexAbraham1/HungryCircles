@@ -282,6 +282,8 @@ void ofApp::saveImage() {
 	image.loadImage(name);
 	fixImageRotation();
 	image.saveImage(name);
+
+	ofxAndroidToast("Image Saved");
 }
 
 void ofApp::touchCircle(int x, int y) {
