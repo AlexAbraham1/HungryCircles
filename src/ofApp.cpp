@@ -9,6 +9,8 @@ void ofApp::setup() {
 	screenWidth = ofGetScreenWidth();
 	screenHeight = ofGetScreenHeight();
 
+	ofEnableDepthTest(); //Used to calculate where to draw elements based on Z index instead of order drawn
+
 	grabber = shared_ptr<ofVideoGrabber>(new ofVideoGrabber());
 	grabber->setPixelFormat(OF_PIXELS_RGB);
 	DEVICE_ID = 0;
@@ -24,6 +26,10 @@ void ofApp::setup() {
 	haarFinder.setNeighbors(1);
 	haarFinder.setScaleHaar(2);
 
+	colorCv.allocate(screenWidth, screenHeight);
+	colorCvSmall.allocate(haarWidth, haarHeight);
+	grayCv.allocate(haarWidth, haarHeight);
+
 	firstRun = true;
 
 	minRadius = 10;
@@ -31,11 +37,13 @@ void ofApp::setup() {
 
 	maxTimesDrawn = 10;
 
-	orientation = OF_ORIENTATION_DEFAULT;
+	orientation = OF_ORIENTATION_90_LEFT;
 
 	percent = 50;
 
 	showPercent = false;
+
+	sidebarWidth = screenWidth/10;
 
 	ofxAccelerometer.setup();
 }
@@ -47,7 +55,7 @@ void ofApp::update() {
 
 		//Detect Eyes
 		image.setFromPixels(grabber->getPixelsRef());
-		fixImageRotation();
+		//fixImageRotation(); //Temporarily disabled since it is too slow without restarting video grabber
 
 		colorCv = image.getPixels();
 		colorCvSmall.scaleIntoMe(colorCv, CV_INTER_NN);
@@ -76,7 +84,7 @@ void ofApp::update() {
 
 				x += minRadius;
 
-				if (x > screenWidth) {
+				if (x > screenWidth-sidebarWidth) {
 					x = 0;
 					y += minRadius;
 				}
@@ -151,7 +159,7 @@ void ofApp::draw() {
 		}
 
 		int radius1 = eye.boundingRect.width;
-
+		ofEnableDepthTest();
 		ofSetColor(0, 0, 255);
 		ofCircle(x, y, 100, radius1);
 	}
@@ -183,28 +191,40 @@ void ofApp::windowResized(int w, int h) {
 
 //--------------------------------------------------------------
 void ofApp::touchDown(int x, int y, int id) {
-	percent = ((x*100)/screenWidth) + minRadius;
-	if (percent > 100) {
-		percent = 100;
+	if (x < screenWidth-sidebarWidth) {
+		percent = ((x*100)/screenWidth) + minRadius;
+		if (percent > 100) {
+			percent = 100;
+		}
+		showPercent = true;
+	} else {
+		showPercent = false;
 	}
-	showPercent = true;
 }
 
 //--------------------------------------------------------------
 void ofApp::touchMoved(int x, int y, int id) {
-	percent = ((x*100)/screenWidth) + minRadius;
-	if (percent > 100) {
-		percent = 100;
+
+	if (x < screenWidth-sidebarWidth) {
+		percent = ((x*100)/screenWidth) + minRadius;
+		if (percent > 100) {
+			percent = 100;
+		}
+		showPercent = true;
+	} else {
+		showPercent = false;
 	}
 }
 
 //--------------------------------------------------------------
 void ofApp::touchUp(int x, int y, int id) {
-	showPercent = false;
-	maxRadius = percent;
-	circles.clear();
-	firstRun = true;
 
+	if (x < screenWidth-sidebarWidth) {
+		showPercent = false;
+		maxRadius = percent;
+		circles.clear();
+		firstRun = true;
+	}
 }
 
 //--------------------------------------------------------------
@@ -219,7 +239,13 @@ void ofApp::touchCancelled(int x, int y, int id) {
 
 //--------------------------------------------------------------
 void ofApp::swipe(ofxAndroidSwipeDir swipeDir, int id) {
+	//swipeDir: 1 = UP, 2 = DOWN, 3 = LEFT, 4 = RIGHT
 
+	if (swipeDir == 1) {
+		ofLogNotice() << "Swipe Up, MaxRadius NOT changed";
+	} else if (swipeDir == 2) {
+		ofLogNotice() << "Swipe Down, MaxRadius NOT changed";
+	}
 }
 
 //--------------------------------------------------------------

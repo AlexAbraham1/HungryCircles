@@ -80,6 +80,7 @@ public:
 	int orientation;
 
 	int percent;
+	int sidebarWidth;
 
 	bool showPercent;
 
