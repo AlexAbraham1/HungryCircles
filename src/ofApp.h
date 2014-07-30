@@ -64,7 +64,7 @@ public:
 	std::vector<Circle*> circles;
 	std::vector<ofxCvBlob> eyes;
 
-	std::list<Circle*> added_circles;
+	std::vector<Circle*> added_circles;
 
 	int minRadius;
 	int maxRadius;

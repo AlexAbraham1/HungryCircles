@@ -94,12 +94,16 @@ void ofApp::update() {
 			fixZIndex();
 			cleanupCircles();
 
-			for(std::list<Circle*>::iterator circle = added_circles.begin(); circle != added_circles.end(); ++circle) {
-				if ((*circle)->timesDrawn > maxTimesDrawn) {
-					circle = added_circles.erase(circle);
-				}
-			}
+		}
 
+		for(std::vector<Circle*>::iterator circle = added_circles.begin(); circle != added_circles.end();) {
+			if ((*circle)->timesDrawn > maxTimesDrawn) {
+				delete * circle;
+				circle = added_circles.erase(circle);
+			}
+			else {
+				++ circle;
+			}
 		}
 
 
@@ -116,10 +120,8 @@ void ofApp::draw() {
 		circle->drawCircle();
 	}
 
-	for(std::list<Circle*>::iterator circle = added_circles.begin(); circle != added_circles.end(); ++circle) {
-		if ((*circle)->timesDrawn <= maxTimesDrawn) {
-			(*circle)->drawCircle();
-		}
+	for(std::vector<Circle*>::iterator circle = added_circles.begin(); circle != added_circles.end(); ++circle) {
+		(*circle)->drawCircle();
 	}
 
 
