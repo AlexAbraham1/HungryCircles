@@ -66,8 +66,7 @@ public:
 
 	std::vector<Circle*> added_circles;
 
-	int minRadius;
-	int maxRadius;
+	int minRadius, maxRadius, minZ, maxZ;
 	int maxTimesDrawn;
 
 	int DEVICE_ID;
@@ -85,5 +84,4 @@ public:
 	bool showPercent;
 
 	ofTrueTypeFont font;
-
 };
